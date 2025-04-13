@@ -3,8 +3,7 @@
 A comprehensive anti-scraping solution that uses natural human interaction patterns to distinguish between real users and bots.
 
 ## Overview
-
-This project provides a robust solution for protecting websites from automated scraping by implementing a behavioral analysis system. Instead of using traditional CAPTCHAs or puzzles, this system verifies users through natural interactions like mouse movements, keyboard patterns, and touch gestures.
+This project provides a solution for protecting websites from automated scraping by implementing a behavioral analysis system. Instead of using traditional CAPTCHAs or puzzles, this system verifies users through natural interactions like mouse movements, keyboard patterns, and touch gestures.
 
 ## Features
 
@@ -112,4 +111,4 @@ MIT
 
 ## Author
 
-[Your Name] 
+Rayhan Ramirez
