@@ -109,6 +109,3 @@ verifier.verify()
 
 MIT
 
-## Author
-
-Rayhan Ramirez
