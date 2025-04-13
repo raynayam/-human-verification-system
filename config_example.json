@@ -1,0 +1,9 @@
+{
+    "result_card": "card-summary",
+    "name": "name",
+    "age": "age",
+    "address": "address",
+    "next_button": "//a[contains(text(), 'Next')]",
+    "captcha_iframe": "iframe[title='reCAPTCHA']",
+    "cookie_accept": "cookieAcceptButton"
+} 

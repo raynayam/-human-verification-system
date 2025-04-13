@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verification Required</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f8f9fa;
+      color: #333;
+      line-height: 1.6;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    
+    .verification-container {
+      max-width: 500px;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      padding: 30px;
+      text-align: center;
+    }
+    
+    h1 {
+      color: #4a6fa5;
+      margin-top: 0;
+      font-size: 1.8rem;
+    }
+    
+    .progress {
+      height: 4px;
+      background-color: #eee;
+      border-radius: 2px;
+      margin: 20px 0;
+      overflow: hidden;
+    }
+    
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background-color: #4a6fa5;
+      transition: width 0.5s ease-in-out;
+    }
+    
+    .step {
+      display: none;
+    }
+    
+    .step.active {
+      display: block;
+    }
+    
+    .btn {
+      background-color: #4a6fa5;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 15px;
+      transition: background-color 0.3s;
+    }
+    
+    .btn:hover {
+      background-color: #3a5a8a;
+    }
+    
+    .challenge-text {
+      font-size: 18px;
+      margin: 20px 0;
+      padding: 15px;
+      background-color: #f0f5ff;
+      border-radius: 4px;
+    }
+    
+    input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+      margin-top: 10px;
+      box-sizing: border-box;
+    }
+    
+    .error-message {
+      color: #d9534f;
+      margin-top: 10px;
+      display: none;
+    }
+    
+    .spinner {
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #4a6fa5;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+      display: none;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .info-text {
+      font-size: 14px;
+      color: #666;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="verification-container">
+    <h1>Security Verification</h1>
+    <p>Please complete this quick verification to access the protected content.</p>
+    
+    <div class="progress">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+    
+    <div class="step active" id="step1">
+      <p>We need to verify you're a human visitor and not a bot.</p>
+      <button class="btn" id="startVerification">Begin Verification</button>
+    </div>
+    
+    <div class="step" id="step2">
+      <p>Analyzing your browser...</p>
+      <div class="spinner" id="spinner1"></div>
+      <div class="progress-info" id="progressInfo">Initializing verification...</div>
+    </div>
+    
+    <div class="step" id="step3">
+      <p>Please complete this challenge:</p>
+      <div class="challenge-text" id="challengeText">Loading challenge...</div>
+      <input type="text" id="challengeAnswer" placeholder="Enter your answer here">
+      <div class="error-message" id="errorMessage">Incorrect answer, please try again.</div>
+      <button class="btn" id="submitChallenge">Submit Answer</button>
+    </div>
+    
+    <div class="step" id="step4">
+      <p>Verifying your answer...</p>
+      <div class="spinner" id="spinner2"></div>
+    </div>
+    
+    <div class="step" id="step5">
+      <p>Verification successful!</p>
+      <p>You will be redirected to the content in a moment...</p>
+      <div class="spinner" id="spinner3"></div>
+    </div>
+    
+    <div class="info-text">
+      This verification helps protect our content from automated scraping and abuse.
+    </div>
+  </div>
+
+  <script>
+    // Fingerprinting functions
+    function generateFingerprint() {
+      const fingerprint = {
+        userAgent: navigator.userAgent,
+        language: navigator.language,
+        colorDepth: screen.colorDepth,
+        screenResolution: `${screen.width}x${screen.height}`,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        timezoneOffset: new Date().getTimezoneOffset(),
+        sessionStorage: !!window.sessionStorage,
+        localStorage: !!window.localStorage,
+        indexedDb: !!window.indexedDB,
+        platform: navigator.platform,
+        doNotTrack: navigator.doNotTrack,
+        canvas: getCanvasFingerprint(),
+        webgl: getWebGLFingerprint(),
+        audioContext: getAudioFingerprint(),
+        plugins: getPluginsFingerprint(),
+        touchSupport: getTouchSupport(),
+        fonts: detectCommonFonts()
+      };
+      
+      return fingerprint;
+    }
+    
+    function getCanvasFingerprint() {
+      try {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = 200;
+        canvas.height = 50;
+        
+        // Text with characteristics that vary between browsers
+        ctx.font = '20px Arial';
+        ctx.fillStyle = 'red';
+        ctx.fillText('Canvas Fingerprint', 10, 30);
+        ctx.strokeStyle = 'blue';
+        ctx.strokeText('Canvas Fingerprint', 10, 30);
+        
+        return canvas.toDataURL().slice(0, 100);
+      } catch (e) {
+        return 'canvas-unsupported';
+      }
+    }
+    
+    function getWebGLFingerprint() {
+      try {
+        const canvas = document.createElement('canvas');
+        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+        
+        if (!gl) {
+          return 'webgl-unsupported';
+        }
+        
+        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+        
+        if (debugInfo) {
+          return {
+            vendor: gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL),
+            renderer: gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL)
+          };
+        }
+        
+        return {
+          vendor: gl.getParameter(gl.VENDOR),
+          renderer: gl.getParameter(gl.RENDERER)
+        };
+      } catch (e) {
+        return 'webgl-error';
+      }
+    }
+    
+    function getAudioFingerprint() {
+      try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const analyser = audioContext.createAnalyser();
+        
+        return audioContext.sampleRate.toString();
+      } catch (e) {
+        return 'audio-unsupported';
+      }
+    }
+    
+    function getPluginsFingerprint() {
+      if (!navigator.plugins || navigator.plugins.length === 0) {
+        return 'no-plugins';
+      }
+      
+      const plugins = [];
+      
+      for (let i = 0; i < navigator.plugins.length; i++) {
+        const plugin = navigator.plugins[i];
+        plugins.push(plugin.name);
+      }
+      
+      return plugins.join(',');
+    }
+    
+    function getTouchSupport() {
+      return {
+        maxTouchPoints: navigator.maxTouchPoints || 0,
+        touchEvent: 'ontouchstart' in window,
+        touchPoints: navigator.msMaxTouchPoints || 0
+      };
+    }
+    
+    function detectCommonFonts() {
+      const fontTestString = 'mmmmmmmmmmlli';
+      const testSize = '72px';
+      const baseFonts = ['monospace', 'sans-serif', 'serif'];
+      const fontList = [
+        'Arial', 'Verdana', 'Times New Roman', 'Courier New', 'Georgia',
+        'Trebuchet MS', 'Impact', 'Comic Sans MS', 'Tahoma', 'Palatino'
+      ];
+      
+      const detected = [];
+      const testDiv = document.createElement('div');
+      testDiv.style.cssText = 'position: absolute; left: -9999px; visibility: hidden; display: block !important';
+      document.body.appendChild(testDiv);
+      
+      const baseWidths = {};
+      
+      for (let i = 0; i < baseFonts.length; i++) {
+        testDiv.style.fontFamily = baseFonts[i];
+        testDiv.innerHTML = fontTestString;
+        baseWidths[baseFonts[i]] = testDiv.offsetWidth;
+      }
+      
+      for (let i = 0; i < fontList.length; i++) {
+        let detected = false;
+        
+        for (let j = 0; j < baseFonts.length; j++) {
+          testDiv.style.fontFamily = fontList[i] + ', ' + baseFonts[j];
+          testDiv.innerHTML = fontTestString;
+          
+          if (testDiv.offsetWidth !== baseWidths[baseFonts[j]]) {
+            detected = true;
+            break;
+          }
+        }
+        
+        if (detected) {
+          detected.push(fontList[i]);
+        }
+      }
+      
+      document.body.removeChild(testDiv);
+      return detected.join(',');
+    }
+    
+    // UI-related functions and event handlers
+    document.addEventListener('DOMContentLoaded', function() {
+      const progressBar = document.getElementById('progressBar');
+      const startButton = document.getElementById('startVerification');
+      const submitButton = document.getElementById('submitChallenge');
+      const challengeText = document.getElementById('challengeText');
+      const challengeAnswer = document.getElementById('challengeAnswer');
+      const errorMessage = document.getElementById('errorMessage');
+      const progressInfo = document.getElementById('progressInfo');
+      const spinner1 = document.getElementById('spinner1');
+      const spinner2 = document.getElementById('spinner2');
+      const spinner3 = document.getElementById('spinner3');
+      
+      let challengeId = null;
+      
+      function showStep(stepNumber) {
+        document.querySelectorAll('.step').forEach(step => {
+          step.classList.remove('active');
+        });
+        
+        document.getElementById('step' + stepNumber).classList.add('active');
+        progressBar.style.width = ((stepNumber - 1) * 25) + '%';
+      }
+      
+      startButton.addEventListener('click', function() {
+        showStep(2);
+        spinner1.style.display = 'block';
+        
+        const steps = [
+          'Collecting browser information...',
+          'Analyzing device characteristics...',
+          'Verifying your identity...'
+        ];
+        
+        let currentStep = 0;
+        
+        const interval = setInterval(() => {
+          if (currentStep < steps.length) {
+            progressInfo.textContent = steps[currentStep];
+            currentStep++;
+          } else {
+            clearInterval(interval);
+            verifyIdentity();
+          }
+        }, 1000);
+      });
+      
+      function verifyIdentity() {
+        const fingerprint = generateFingerprint();
+        
+        fetch('/api/verify', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ fingerprint })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.status === 'verified') {
+            // Successfully verified, redirect to original content
+            showStep(5);
+            spinner3.style.display = 'block';
+            
+            setTimeout(() => {
+              window.location.href = '/';
+            }, 1500);
+          } else if (data.status === 'challenge_required') {
+            // Challenge required, show challenge
+            requestChallenge();
+          } else {
+            // Error or other status
+            errorMessage.textContent = data.message || 'Verification failed. Please try again.';
+            errorMessage.style.display = 'block';
+            showStep(1);
+          }
+        })
+        .catch(error => {
+          console.error('Verification error:', error);
+          errorMessage.textContent = 'A network error occurred. Please try again.';
+          errorMessage.style.display = 'block';
+          showStep(1);
+        });
+      }
+      
+      function requestChallenge() {
+        fetch('/api/challenge')
+          .then(response => response.json())
+          .then(data => {
+            if (data.status === 'success') {
+              challengeId = data.challengeId;
+              challengeText.textContent = data.challenge;
+              showStep(3);
+            } else {
+              errorMessage.textContent = data.message || 'Failed to get challenge. Please try again.';
+              errorMessage.style.display = 'block';
+              showStep(1);
+            }
+          })
+          .catch(error => {
+            console.error('Challenge request error:', error);
+            errorMessage.textContent = 'A network error occurred. Please try again.';
+            errorMessage.style.display = 'block';
+            showStep(1);
+          });
+      }
+      
+      submitButton.addEventListener('click', function() {
+        const answer = challengeAnswer.value.trim();
+        
+        if (!answer) {
+          errorMessage.textContent = 'Please enter an answer to the challenge.';
+          errorMessage.style.display = 'block';
+          return;
+        }
+        
+        errorMessage.style.display = 'none';
+        showStep(4);
+        spinner2.style.display = 'block';
+        
+        const fingerprint = generateFingerprint();
+        
+        fetch('/api/challenge', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            challengeId,
+            answer,
+            fingerprint
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.status === 'success') {
+            // Challenge completed successfully
+            showStep(5);
+            spinner3.style.display = 'block';
+            
+            setTimeout(() => {
+              window.location.href = '/';
+            }, 1500);
+          } else {
+            // Challenge failed
+            errorMessage.textContent = data.message || 'Incorrect answer. Please try again.';
+            errorMessage.style.display = 'block';
+            showStep(3);
+          }
+        })
+        .catch(error => {
+          console.error('Challenge submission error:', error);
+          errorMessage.textContent = 'A network error occurred. Please try again.';
+          errorMessage.style.display = 'block';
+          showStep(3);
+        });
+      });
+    });
+  </script>
+</body>
+</html> 

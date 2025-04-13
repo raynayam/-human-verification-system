@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Human Verification</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+        }
+        
+        .container {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 600px;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+        
+        p {
+            margin-bottom: 1.5rem;
+            color: #555;
+        }
+        
+        .progress-container {
+            margin-bottom: 2rem;
+            position: relative;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background-color: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background-color: #4CAF50;
+            transition: width 0.3s ease;
+        }
+        
+        .interaction-area {
+            background-color: #f9f9f9;
+            border: 1px solid #eaeaea;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: default;
+        }
+        
+        #verify-btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        
+        #verify-btn.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        #verify-btn:hover {
+            background-color: #45a049;
+        }
+        
+        .status-message {
+            margin-top: 1.5rem;
+            font-weight: 500;
+            min-height: 24px;
+        }
+        
+        .success-message {
+            color: #4CAF50;
+        }
+        
+        .error-message {
+            color: #f44336;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #4CAF50;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        #continue-btn {
+            display: none;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 1rem;
+        }
+        
+        #continue-btn:hover {
+            background-color: #0b7dda;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 1.5rem;
+                width: 95%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Human Verification</h1>
+        <p>Please interact naturally with the page to help us verify you're human. Move your mouse, click, or type in the interaction area below.</p>
+        
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress"></div>
+            </div>
+        </div>
+        
+        <div class="interaction-area" id="interaction-area">
+            <p>Move your cursor here, click, or press keys to interact</p>
+            <input type="text" id="text-input" placeholder="Type something here..." style="margin-top: 15px; padding: 8px; width: 80%;">
+        </div>
+        
+        <button id="verify-btn" disabled>Verify Now</button>
+        <div class="status-message" id="status-message"></div>
+        <button id="continue-btn">Continue to Website</button>
+    </div>
+
+    <script src="/anti-scraper.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const progressBar = document.getElementById('progress');
+            const verifyBtn = document.getElementById('verify-btn');
+            const statusMessage = document.getElementById('status-message');
+            const continueBtn = document.getElementById('continue-btn');
+            const interactionArea = document.getElementById('interaction-area');
+            
+            let interactionCount = 0;
+            const requiredInteractions = 15;
+            
+            // Initialize the HumanVerifier
+            const verifier = new HumanVerifier({
+                verificationEndpoint: '/verify',
+                challengeEndpoint: '/challenge',
+                mouseSampleRate: 100,
+                keyboardSampleRate: 50,
+                maxEvents: 50
+            });
+            
+            // Start a new verification session
+            verifier.createSession().then(response => {
+                if (response.success) {
+                    console.log('Session created successfully');
+                    
+                    // Start listening for user interactions
+                    verifier.attachListeners();
+                    
+                    // Track progress
+                    verifier.onEventCollected = () => {
+                        interactionCount++;
+                        const progress = Math.min(100, (interactionCount / requiredInteractions) * 100);
+                        progressBar.style.width = `${progress}%`;
+                        
+                        if (interactionCount >= requiredInteractions) {
+                            verifyBtn.classList.add('active');
+                            verifyBtn.disabled = false;
+                        }
+                    };
+                }
+            }).catch(error => {
+                statusMessage.textContent = 'Error initializing verification. Please refresh the page.';
+                statusMessage.className = 'status-message error-message';
+                console.error('Session creation error:', error);
+            });
+            
+            // Handle verification button click
+            verifyBtn.addEventListener('click', function() {
+                // Show loading state
+                verifyBtn.disabled = true;
+                verifyBtn.innerHTML = '<span class="loading"></span> Verifying...';
+                statusMessage.textContent = '';
+                
+                // Send verification data
+                verifier.verify().then(result => {
+                    verifyBtn.innerHTML = 'Verify Now';
+                    
+                    if (result.success) {
+                        statusMessage.textContent = 'Verification successful!';
+                        statusMessage.className = 'status-message success-message';
+                        continueBtn.style.display = 'inline-block';
+                        
+                        // Cleanup
+                        verifier.detachListeners();
+                    } else {
+                        statusMessage.textContent = result.message || 'Verification failed. Please try again.';
+                        statusMessage.className = 'status-message error-message';
+                        verifyBtn.disabled = false;
+                        verifyBtn.classList.add('active');
+                    }
+                }).catch(error => {
+                    verifyBtn.innerHTML = 'Verify Now';
+                    verifyBtn.disabled = false;
+                    verifyBtn.classList.add('active');
+                    statusMessage.textContent = 'Error during verification. Please try again.';
+                    statusMessage.className = 'status-message error-message';
+                    console.error('Verification error:', error);
+                });
+            });
+            
+            // Handle continue button click
+            continueBtn.addEventListener('click', function() {
+                // Redirect to the protected content or main site
+                window.location.href = '/';
+            });
+        });
+    </script>
+</body>
+</html> 
